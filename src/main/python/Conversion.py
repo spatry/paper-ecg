@@ -80,6 +80,7 @@ def convertECGLeads(inputImage: ColorImage, parameters: InputParameters):
         leadId: common.padRight(signal, maxLength - len(signal))
         for leadId, signal in paddedSignals.items()
     }
+    fullSignals["samplingPeriod"]=samplingPeriod
 
     return fullSignals, previews
 
@@ -90,7 +91,12 @@ def exportSignals(leadSignals, filePath, separator='\t'):
     Args:
         leadSignals (Dict[str -> np.ndarray]): Dict mapping lead id's to np array of signal data (output from convertECGLeads)
     """
+
+    samplingPeriod=leadSignals["samplingPeriod"]
     leads = common.zipDict(leadSignals)
+    for lead,signal in leads:
+        print(lead,type(signal))
+    leads = common.filterList(leads,lambda pair:type(pair[1])==np.ndarray)
     leads.sort(key=lambda pair: pair[0].value)
 
     assert len(leads) >= 1
@@ -98,6 +104,7 @@ def exportSignals(leadSignals, filePath, separator='\t'):
 
     assert all([len(signal) == lengthOfFirst for key, signal in leads])
 
+    header = separator.join([str(leadId) for leadId,_ in leads])+"\n"
     collated = np.array([signal for _, signal in leads])
     output = np.swapaxes(collated, 0, 1)
 
@@ -107,7 +114,9 @@ def exportSignals(leadSignals, filePath, separator='\t'):
     if filePath.exists():
         print("Warning: Output file will be overwritten!")
 
-    outputLines = [
+    outputLines = [f"sample period {samplingPeriod}\n","\n"]
+    outputLines += header
+    outputLines += [
         separator.join(
             [str(val) for val in row]
         ) + "\n"
