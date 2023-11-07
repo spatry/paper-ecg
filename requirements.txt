@@ -5,7 +5,7 @@ PyQt5==5.15.1
 # Numerical/image
 numpy
 # https://stackoverflow.com/questions/62581504/why-do-i-have-modulenotfounderror-no-module-named-scipy-special-cython-specia
-scipy==1.4.1
+scipy
 opencv-python-headless>=4.4
 qimage2ndarray
 
