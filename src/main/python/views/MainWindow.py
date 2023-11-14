@@ -24,7 +24,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def buildUI(self):
         self.buildMenuBar()
         self.buildLeadButtonDictionary()
-
+        
         self.editor = Editor(self)
         self.setCentralWidget(self.editor)
         self.setContentsMargins(0,0,0,0)
@@ -46,6 +46,7 @@ class MainWindow(QtWidgets.QMainWindow):
             menus=[
                 self.buildFileMenu(),
                 self.buildLeadMenu(),
+                self.buildScaleMenu(),
                 self.buildHelpMenu()
             ]
         )
@@ -70,6 +71,29 @@ class MainWindow(QtWidgets.QMainWindow):
                     shortcut=QtGui.QKeySequence.Close,
                     statusTip="Close image file"
                 )
+            ]
+        )
+
+    def buildScaleMenu(self):
+        return Qt.Menu(
+            owner=self,
+            name='scaleMenu',
+            displayName='Scale',
+            items=[
+               Qt.MenuAction(
+                    owner=self,
+                    name="addXscale",
+                    displayName="Add X Scale",
+                    shortcut=QtGui.QKeySequence('Ctrl+X'),
+                    statusTip="Add X Scale"
+                ),
+               Qt.MenuAction(
+                    owner=self,
+                    name="addYscale",
+                    displayName="Add Y Scale",
+                    shortcut=QtGui.QKeySequence('Ctrl+Y'),
+                    statusTip="Add Y Scale"
+                ),
             ]
         )
 

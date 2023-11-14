@@ -34,17 +34,24 @@ def convertECGLeads(inputImage: ColorImage, parameters: InputParameters):
     # If all signals failed -> Failure
     if all([isinstance(signal, common.Failure) for _, signal in signals.items()]):
         return None, None
+    for leadId, points in signals.items():
+        signal,time = points
+        print(leadId,signal,time)
+    # bounds = {
+    #     leadId: (max([])-min([]),max([])-min([]))
+    #     for leadId, signal in signals
+    # }
 
     previews = {
-        leadId: visualization.overlaySignalOnImage(signal, image)
+        leadId: visualization.overlaySignalOnImage(signal[0], image)
         for (leadId, image), (_, signal) in zip(leadImages.items(), signals.items())
     }
 
     # Map leads to grid size estimates
-    gridSpacings = {
-        leadId: extractGrid(leadImage)
-        for leadId, leadImage in leadImages.items()
-    }
+    # gridSpacings = {
+    #     leadId: extractGrid(leadImage)
+    #     for leadId, leadImage in leadImages.items()
+    # }
     # Just got successful spacings
     spacings = [spacing for spacing in gridSpacings.values() if not isinstance(spacing, common.Failure)]
 
@@ -54,10 +61,10 @@ def convertECGLeads(inputImage: ColorImage, parameters: InputParameters):
     samplingPeriodInPixels = gridHeightInPixels = common.mean(spacings)
 
     # Scale signals
-    # TODO: Pass in the grid size in mm
+    # TODO: Scale According to px/mv/ms fiducials
     scaledSignals = {
         leadId: ecgdigitize.signal.verticallyScaleECGSignal(
-            ecgdigitize.signal.zeroECGSignal(signal),
+            ecgdigitize.signal.zeroECGSignal(signal[0]),
             gridHeightInPixels,
             parameters.voltScale, gridSizeInMillimeters=1.0
         )

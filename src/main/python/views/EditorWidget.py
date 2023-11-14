@@ -11,6 +11,7 @@ from PyQt5 import QtCore, QtWidgets
 from model.Lead import LeadId
 from views.ImageView import *
 from views.ROIView import *
+from views.ScaleROIView import *
 from views.EditPanelLeadView import *
 from views.EditPanelGlobalView import *
 from QtWrapper import *
@@ -55,6 +56,16 @@ class Editor(QtWidgets.QWidget):
                                 owner=self,
                                 name="EditPanelLeadView",
                                 widget=EditPanelLeadView(self)
+                            ),
+                            Custom(
+                                owner=self,
+                                name="EditPanelXScaleView",
+                                widget=EditPanelXScaleView(self)
+                            ),
+                            Custom(
+                                owner=self,
+                                name="EditPanelYScaleView",
+                                widget=EditPanelYScaleView(self)
                             )
                         ])
                     )
@@ -83,12 +94,17 @@ class Editor(QtWidgets.QWidget):
         self.mainWindow.addLeadV4.triggered.connect(lambda: self.addLead(LeadId['V4']))
         self.mainWindow.addLeadV5.triggered.connect(lambda: self.addLead(LeadId['V5']))
         self.mainWindow.addLeadV6.triggered.connect(lambda: self.addLead(LeadId['V6']))
-
+        
+        self.mainWindow.addXscale.triggered.connect(lambda: self.addXscale())
+        self.mainWindow.addYscale.triggered.connect(lambda: self.addYscale())
 
         self.imageViewer.roiItemSelected.connect(self.setControlPanel)
 
         self.EditPanelLeadView.leadStartTimeChanged.connect(self.updateLeadStartTime)
         self.EditPanelLeadView.deleteLeadRoi.connect(self.deleteLeadRoi)
+
+        self.EditPanelXScaleView.XScalemsecChanged.connect(self.updateXScalemsec)
+        self.EditPanelXScaleView.deleteXscale.connect(self.deleteXScale)
 
     def loadSavedState(self, data):
         self.EditPanelGlobalView.setRotation(data['rotation'])
@@ -107,8 +123,12 @@ class Editor(QtWidgets.QWidget):
     ###########################
 
     def setControlPanel(self, leadId=None, leadSelected=False):
-        if leadSelected == True and leadId is not None:
+        if leadId in {"I","II","III","aVR","aVF","aVL","V1","V2","V3","V4","V5","V6"}:
             self.showLeadDetailView(leadId)
+        elif leadId == "X":
+            self.showXScaleDetailView()
+        elif leadId == "Y":
+            pass
         else:
             # self.showGlobalView(self.inputParameters.voltScale, self.inputParameters.timeScale)
             self.showGlobalView()
@@ -123,6 +143,11 @@ class Editor(QtWidgets.QWidget):
         self.EditPanelLeadView.setValues(leadId, leadStartTime)
         self.editPanel.setCurrentIndex(1)
 
+    def showXScaleDetailView(self):
+        # leadStartTime = self.inputParameters.leads[LeadId[leadId]].startTime
+        leadStartTime = self.imageViewer.getXScalemsec()
+        self.EditPanelXScaleView.setValues(leadStartTime)
+        self.editPanel.setCurrentIndex(1)
 
     ###################
     # Image Functions #
@@ -170,7 +195,35 @@ class Editor(QtWidgets.QWidget):
 
             self.imageViewer._scene.addItem(roiBox)
             roiBox.show()
+    def addXscale(self, x=0, y=0, width=400, height=200, startTime=0.0):
+        if self.imageViewer.hasImage():
+            print("XScale")
+            # Disable menu action so user can't add more than one bounding box for an individual lead
+            # action.setEnabled(False)
+            self.mainWindow.addXscale.setEnabled(False)
 
+            # Create instance of Region of Interest (ROI) bounding box and add to image viewer
+            roiBox = XScaleROIItem(self.imageViewer._scene)
+            roiBox.setRect(x, y, width, height)
+            roiBox.msecper = startTime
+
+            self.imageViewer._scene.addItem(roiBox)
+            roiBox.show()
+    def addYscale(self, x=0, y=0, width=400, height=200, startTime=0.0):
+        if self.imageViewer.hasImage():
+            print("YScale")
+
+            # Disable menu action so user can't add more than one bounding box for an individual lead
+            # action.setEnabled(False)
+            self.mainWindow.addYscale.setEnabled(False)
+
+            # Create instance of Region of Interest (ROI) bounding box and add to image viewer
+            roiBox = YScaleROIItem(self.imageViewer._scene)
+            roiBox.setRect(x, y, width, height)
+            roiBox.mVper = startTime
+
+            self.imageViewer._scene.addItem(roiBox)
+            roiBox.show()
     def updateLeadStartTime(self, leadId, value=None):
         if value is None:
             value = self.EditPanelLeadView.leadStartTimeSpinBox.value()

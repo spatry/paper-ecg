@@ -160,19 +160,22 @@ def convertPointsToSignal(points: List[Point], width: Optional[int] = None) -> n
 
     arraySize = width or (firstPoint.x + 1)
     signal = np.full(arraySize, np.nan, dtype=float)
-
+    time = np.zeros_like(signal)
     signal[firstPoint.index] = firstPoint.y
+    time[firstPoint.index] = firstPoint.x
     priorPoint = firstPoint
 
     for point in points[1:]:
         if isnan(signal[point.index + 1]):
             for interpolatedPoint in interpolate(point, priorPoint):
                 signal[interpolatedPoint.index] = interpolatedPoint.y
+                time[interpolatedPoint.index] = interpolatedPoint.x
 
         signal[point.index] = point.y
+        time[point.index] = point.x
         priorPoint = point
 
-    return signal
+    return signal, time
 
 
 def extractSignal(binary: BinaryImage) -> Optional[np.ndarray]:
@@ -232,7 +235,7 @@ def extractSignal(binary: BinaryImage) -> Optional[np.ndarray]:
         bestPath.append(current)
         _, current, _ = bestPathToPoint[current]
 
-    signal = convertPointsToSignal(bestPath) #, width=binary.width)
+    signal, time = convertPointsToSignal(bestPath) #, width=binary.width)
 
     # scores = [bestPathToPoint[point][0] ** .5 for point in points]
     # plt.imshow(binary.toColor().data, cmap='Greys')
@@ -240,4 +243,4 @@ def extractSignal(binary: BinaryImage) -> Optional[np.ndarray]:
     # # plt.plot(signal, c='purple')
     # plt.show()
 
-    return signal
+    return signal, time
